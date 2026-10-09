@@ -1,0 +1,35 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "pixelplay"
+version = "0.1.0"
+description = "Real-time mirroring of locally rendered frames to iPixel Color LED matrix panels, built on pypixelcolor."
+readme = "README.md"
+requires-python = ">=3.9"
+authors = [
+  { name = "BaramoK" },
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+  "pypixelcolor>=0.5.0",
+  "Pillow",
+]
+
+[project.urls]
+Homepage = "https://github.com/lucagoc/pypixelcolor"
+
+[project.scripts]
+pixelplay = "pixelplay.cli:main"
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=7.0.0",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/pixelplay"]
