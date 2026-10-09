@@ -24,7 +24,12 @@ as a library and adds a small, testable layer on top of it:
 
 ## Installation
 
+The package is not published on PyPI yet, so install it from the repository
+([github.com/BaramoK/iPixel-Play](https://github.com/BaramoK/iPixel-Play)):
+
 ```bash
+git clone https://github.com/BaramoK/iPixel-Play.git
+cd iPixel-Play
 pip install -e .
 ```
 
