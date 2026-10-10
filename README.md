@@ -38,6 +38,9 @@ The package is split into three parts:
 `pixelplay` namespace re-exports the public API, so
 `from pixelplay import Panel, render_bouncing_ball` keeps working.
 
+The [`docs/library.md`](docs/library.md) guide documents the internals of
+`pixelplay.library` (module responsibilities, dependency rules, contracts and
+testing patterns) for anyone extending it.
 
 ## Installation
 
