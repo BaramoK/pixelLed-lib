@@ -49,6 +49,8 @@ def run_play(
 
     from PIL import ImageTk
 
+    from ..library.window import Window
+
     scale = max(1, int(scale))
     with use_panel(address, brightness, panel) as panel:
         print(
@@ -66,13 +68,13 @@ def run_play(
         view_w = panel.width * scale
         view_h = panel.height * scale
 
-        root = tk.Tk()
-        root.title(f"pixelled_lib play - {panel.width}x{panel.height} @ {address}")
+        title = f"pixelled_lib play - {panel.width}x{panel.height} @ {address}"
+        window = Window(title, pack_label=False)
         canvas = tk.Canvas(
-            root, width=view_w, height=view_h, highlightthickness=0, bg="black"
+            window.root, width=view_w, height=view_h, highlightthickness=0, bg="black"
         )
         canvas.pack()
-        status = tk.Label(root, anchor="w", font=("Consolas", 9))
+        status = window.label
         status.pack(fill="x")
 
         photo = None  # keep a reference so Tk does not garbage-collect it
@@ -104,20 +106,20 @@ def run_play(
             elif key == "r":
                 sprite.center(panel.width, panel.height)
             elif key in ("q", "escape"):
-                root.destroy()
+                window.close()
                 return
             else:
                 return
             redraw()
 
-        root.bind("<Key>", on_key)
-        root.protocol("WM_DELETE_WINDOW", root.destroy)
-        root.focus_force()
+        window.bind("<Key>", on_key)
+        window.on_close(window.close)
         redraw()
         try:
-            root.mainloop()
+            window.mainloop()
         finally:
             sender.stop()
             sender.join(timeout=1.0)
+            window.close()
 
         print(f"Sent {sender.sent} frames.")

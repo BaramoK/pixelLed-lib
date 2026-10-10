@@ -379,9 +379,11 @@ def _choose(
     :data:`_BACK` so the caller can go back up one level instead of quitting.
 
     Only the keyboard is displayed on screen - the whole point is the panel -
-    so the window is a single label with the help text.
+    so the window is a single label with the help text. It lives on the shared
+    root (see :mod:`pixelled_lib.library.window`) and is only *hidden* when the
+    choice is made, so the tool started next reuses the same interpreter.
     """
-    import tkinter as tk
+    from .window import Window
 
     interval = max(1, int(round(1000 / fps))) if fps > 0 else 100
     repeater = KeyRepeater()
@@ -390,12 +392,9 @@ def _choose(
     sender.start()
     choice: Optional[MenuItem] = None
     back = False
-    alive = True
 
-    root = tk.Tk()
-    root.title("pixelled launcher - keyboard")
-    label = tk.Label(root, anchor="w", justify="left", font=("Consolas", 9))
-    label.pack(padx=10, pady=10)
+    window = Window("pixelled launcher - keyboard")
+    label = window.label
 
     def redraw() -> None:
         mode = "auto" if pilot.auto else "keyboard"
@@ -409,11 +408,7 @@ def _choose(
 
     def close() -> None:
         """Tear the window down, once (idempotent)."""
-        nonlocal alive
-        if not alive:
-            return
-        alive = False
-        root.destroy()
+        window.close()
 
     def launch() -> None:
         nonlocal choice
@@ -468,29 +463,30 @@ def _choose(
         repeater.clear()  # no KeyRelease is delivered when the focus is lost
 
     def tick() -> None:
-        if not alive:
+        if window.closed:
             return
         changed = False
         for key in repeater.due():
             changed = handle(key) or changed
-        if alive and pilot.tick():
+        if window.closed:
+            return  # a key (q/Esc) or the window manager closed the window
+        if pilot.tick():
             menu.move(1)
             changed = True
-        if alive and changed:
+        if changed:
             redraw()
-        if alive:
-            root.after(interval, tick)
+        window.schedule(interval, tick)
 
-    root.bind("<KeyPress>", on_press)
-    root.bind("<KeyRelease>", on_release)
-    root.bind("<FocusOut>", on_focus_out)
-    root.protocol("WM_DELETE_WINDOW", close)
-    root.focus_force()
+    window.bind("<KeyPress>", on_press)
+    window.bind("<KeyRelease>", on_release)
+    window.bind("<FocusOut>", on_focus_out)
+    window.on_close(close)
     redraw()
-    root.after(interval, tick)
+    window.schedule(interval, tick)
     try:
-        root.mainloop()
+        window.mainloop()
     finally:
         sender.stop()
         sender.join(timeout=1.0)
+        window.close()
     return _BACK if back else choice

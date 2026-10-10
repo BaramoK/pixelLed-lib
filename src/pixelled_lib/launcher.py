@@ -60,34 +60,24 @@ def _mirror_until_key(address: str, panel: Panel, fps: float) -> None:
     ``run_mirror`` blocks the thread that calls it, so the tiny window pumps
     its own event queue from ``should_stop`` to stay responsive.
     """
-    import tkinter as tk
+    from .library.window import Window
 
     state = {"stop": False}
-    root = tk.Tk()
-    root.title("pixelled mirror")
-    tk.Label(
-        root,
-        font=("Consolas", 9),
-        text="mirroring the bouncing ball - press any key to stop",
-    ).pack(padx=10, pady=10)
+    window = Window("pixelled mirror")
+    window.label.config(
+        text="mirroring the bouncing ball - press any key to stop"
+    )
 
     def stop(_event=None) -> None:
         state["stop"] = True
-        try:
-            root.destroy()
-        except tk.TclError:
-            pass
 
     def should_stop() -> bool:
-        try:
-            root.update()
-        except tk.TclError:
-            return True  # the window is gone: stop the loop
+        window.root.update()  # the mirror loop blocks this thread: pump it here
         return state["stop"]
 
-    root.bind("<Key>", stop)
-    root.protocol("WM_DELETE_WINDOW", stop)
-    root.focus_force()
+    window.bind("<Key>", stop)
+    window.on_close(stop)
+    window.show()
     print("Press any key in the mirror window to stop.")
     try:
         run_mirror(
@@ -98,10 +88,7 @@ def _mirror_until_key(address: str, panel: Panel, fps: float) -> None:
             should_stop=should_stop,
         )
     finally:
-        try:
-            root.destroy()
-        except tk.TclError:
-            pass
+        window.close()
 
 
 def run_launcher(
