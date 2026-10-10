@@ -25,7 +25,8 @@ The package is split into three parts:
 
 - `pixelled_lib.library` — the reusable API. `Panel` and `FrameSender` are the
   only modules touching BLE; `render`, `control`, `text`, `keys` and `menu` are
-  pure and unit testable without hardware.
+  pure and unit testable without hardware, while `window` wraps the single
+  tkinter window the interactive tools read the keyboard from.
 - `pixelled_lib.debug` — diagnostic / proof-of-concept tools run against a real
   panel (`bench`, `mirror`, `play`).
 - `pixelled_lib.launcher` — the on-panel launcher that ties the debug tools
@@ -156,6 +157,22 @@ To run something right away without touching the venv, use the module form
 (`.venv/Scripts/python -m pixelled_lib ...`), which bypasses the launcher. Keep
 `.venv/` inside the project and avoid renaming the project folder once the
 environment exists.
+
+### `invalid command name "..." ("after" script)` then `Tcl_AsyncDelete`
+
+Those two messages on stderr are the same mistake: opening a window with
+`tk.Tk()` and destroying it again for every window of a session (the launcher,
+then the tool it starts, then the launcher again). Destroying a window leaves
+its periodic `after` timer queued in Tcl's notifier, so the *next* window runs
+it and Tcl reports the first message — the callback of the closed window no
+longer exists. Tearing Tcl interpreters down over and over then aborts the
+process with `Tcl_AsyncDelete: async handler deleted by the wrong thread`, and
+the window stops responding.
+
+Every tool therefore runs on the single root of `pixelled_lib.library.window`:
+create a `Window`, drive it with `Window.schedule()`, and finish with
+`Window.close()` — never call `tk.Tk()`, `root.destroy()` or `root.after()`
+directly in a tool.
 
 ## License
 

@@ -4,6 +4,11 @@ Modules here contain no CLI and no application wiring. :class:`Panel` and
 :class:`FrameSender` are the only ones touching BLE; everything else
 (:mod:`render`, :mod:`control`, :mod:`text`, :mod:`keys` and the :mod:`menu`
 engine) is pure and can be unit tested without a physical panel.
+
+:mod:`window` is the odd one out: it wraps the single tkinter window the
+interactive tools read the keyboard from. It is deliberately *not* re-exported
+here, so importing this package never imports tkinter - the tools that need a
+window import :class:`pixelled_lib.library.window.Window` directly.
 """
 
 from .control import PALETTE, Sprite
