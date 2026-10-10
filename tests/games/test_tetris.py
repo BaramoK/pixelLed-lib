@@ -9,8 +9,7 @@ import io
 
 from PIL import Image
 
-from pixelplay.panel import Panel
-from pixelplay.tetris import (
+from pixelplay.games.tetris import (
     BLOCK_H,
     BLOCK_W,
     FIELD_COLS,
@@ -26,6 +25,7 @@ from pixelplay.tetris import (
     TETROMINOES,
     Tetris,
 )
+from pixelplay.library.panel import Panel
 
 DUMMY = (100, 100, 100)  # stands for "already locked" cells in the tests
 

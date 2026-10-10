@@ -10,7 +10,7 @@ resumes once the keyboard has been idle for a few seconds.
 are pure - no BLE, no tkinter - and therefore unit tested; :func:`run_menu` is
 the only part that opens a window and talks to hardware. The whole session
 shares a single BLE connection: every tool borrows the panel opened here (see
-:func:`pixelplay.panel.use_panel`) instead of reconnecting.
+:func:`pixelplay.library.panel.use_panel`) instead of reconnecting.
 """
 
 from __future__ import annotations
@@ -20,16 +20,16 @@ from typing import Callable, Optional, Sequence, Union
 
 from PIL import Image, ImageDraw
 
-from .bench import run_bench
-from .breakout import run_breakout
-from .keys import KeyRepeater
-from .mirror import run_mirror
-from .panel import Panel
-from .play import run_play
-from .render import render_bouncing_ball
-from .sender import FrameSender
-from .tetris import run_tetris
-from .text import (
+from .debug.bench import run_bench
+from .debug.mirror import run_mirror
+from .debug.play import run_play
+from .games.breakout import run_breakout
+from .games.tetris import run_tetris
+from .library.keys import KeyRepeater
+from .library.panel import Panel
+from .library.render import render_bouncing_ball
+from .library.sender import FrameSender
+from .library.text import (
     SPACING,
     draw_text,
     text_advance,

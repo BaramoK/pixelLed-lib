@@ -17,7 +17,7 @@ from pixelplay.menu import (
     display_scale,
     rows_fit,
 )
-from pixelplay.text import GLYPH_H, SPACING, text_width
+from pixelplay.library.text import GLYPH_H, SPACING, text_width
 
 LABELS = ["INFO", "BENCH", "MIRROR", "PLAY", "BRKOUT", "TETRIS"]
 BLACK = (0, 0, 0)

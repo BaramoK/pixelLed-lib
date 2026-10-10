@@ -9,7 +9,7 @@ import io
 
 from PIL import Image
 
-from pixelplay.breakout import (
+from pixelplay.games.breakout import (
     BALL_COLOR,
     BRICK_PITCH,
     BRICK_SIZE,
@@ -20,7 +20,7 @@ from pixelplay.breakout import (
     PADDLE_COLOR,
     Breakout,
 )
-from pixelplay.panel import Panel
+from pixelplay.library.panel import Panel
 
 
 class FakeClient:

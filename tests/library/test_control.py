@@ -10,9 +10,9 @@ import time
 
 from PIL import Image
 
-from pixelplay.control import PALETTE, Sprite
-from pixelplay.panel import Panel
-from pixelplay.play import _Sender
+from pixelplay.debug.play import _Sender
+from pixelplay.library.control import PALETTE, Sprite
+from pixelplay.library.panel import Panel
 
 
 class FakeClient:

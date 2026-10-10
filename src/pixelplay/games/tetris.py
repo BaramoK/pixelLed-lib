@@ -1,7 +1,8 @@
 """A small Tetris demo rendered on the LED panel.
 
 :class:`Tetris` holds the whole game state and is pure (no BLE, no I/O), so it
-can be unit tested without hardware - exactly like :mod:`pixelplay.breakout`.
+can be unit tested without hardware - exactly like
+:mod:`pixelplay.games.breakout`.
 :func:`run_tetris` wires it to a real panel: the field and the HUD (next piece,
 score, level) are drawn on the LED matrix, and a *minimal* tkinter window is
 used only to capture keyboard input.
@@ -24,9 +25,9 @@ from typing import Optional
 
 from PIL import Image, ImageDraw
 
-from .keys import KeyRepeater
-from .panel import Panel, use_panel
-from .sender import FrameSender
+from ..library.keys import KeyRepeater
+from ..library.panel import Panel, use_panel
+from ..library.sender import FrameSender
 
 # Backwards-compatible re-export: ``KeyRepeater`` used to live in this module.
 __all__ = ["KeyRepeater", "Tetris", "run_tetris"]
@@ -519,7 +520,7 @@ def run_tetris(
         seed: Optional RNG seed for a reproducible piece sequence.
         hud: Draw the on-panel HUD (next piece, score bar, level bar).
         panel: Optional already connected panel to use instead of connecting;
-            a borrowed panel is left open (see :func:`pixelplay.panel.use_panel`).
+            a borrowed panel is left open (see :func:`pixelplay.library.panel.use_panel`).
     """
     import tkinter as tk
 

@@ -7,8 +7,8 @@ from typing import Callable, Optional
 
 from PIL import Image
 
-from .panel import Panel, use_panel
-from .render import render_bouncing_ball
+from ..library.panel import Panel, use_panel
+from ..library.render import render_bouncing_ball
 
 Renderer = Callable[[float, int, int], Image.Image]
 
@@ -34,7 +34,7 @@ def run_mirror(
         on_stats: Optional callback invoked after each frame with
             ``(measured_fps, frame_index)``.
         panel: Optional already connected panel to use instead of connecting;
-            a borrowed panel is left open (see :func:`pixelplay.panel.use_panel`).
+            a borrowed panel is left open (see :func:`pixelplay.library.panel.use_panel`).
         should_stop: Optional predicate polled before each frame; the loop
             stops as soon as it returns True.
     """

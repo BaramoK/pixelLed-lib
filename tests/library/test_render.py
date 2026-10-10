@@ -4,7 +4,7 @@ import pytest
 from PIL import Image
 
 from pixelplay import render_bars, render_bouncing_ball, render_gradient
-from pixelplay.render import RENDERERS
+from pixelplay.library.render import RENDERERS
 
 SIZES = [(32, 16), (32, 32), (64, 64)]
 

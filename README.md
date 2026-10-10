@@ -22,6 +22,23 @@ as a library and adds a small, testable layer on top of it:
   dependency) that picks the tool to run and shares a single BLE connection
   with it. It scrolls by itself, so the panel is useful without a keyboard.
 
+## Layout
+
+The package is split into three parts:
+
+- `pixelplay.library` — the reusable API. `Panel` and `FrameSender` are the
+  only modules touching BLE; `render`, `control`, `text` and `keys` are pure
+  and unit testable without hardware.
+- `pixelplay.debug` — diagnostic / proof-of-concept tools run against a real
+  panel (`bench`, `mirror`, `play`).
+- `pixelplay.games` — games rendered on the panel (`breakout`, `tetris`).
+
+`pixelplay.menu` is the on-panel launcher that ties both tool sets together and
+`pixelplay.cli` exposes everything on the command line. The top-level
+`pixelplay` namespace re-exports the public API, so
+`from pixelplay import Panel, render_bouncing_ball` keeps working.
+
+
 ## Installation
 
 The package is not published on PyPI yet, so install it from the repository
@@ -73,7 +90,7 @@ To mirror your own game/render, pass a callable `renderer(t, width, height)`
 returning a `PIL.Image` in `RGB` at the panel size:
 
 ```python
-from pixelplay.mirror import run_mirror
+from pixelplay.debug.mirror import run_mirror
 
 run_mirror("30:E1:AF:BD:5F:D0", fps=8, renderer=my_render_function)
 ```
@@ -120,7 +137,7 @@ run_mirror("30:E1:AF:BD:5F:D0", fps=8, renderer=my_render_function)
   straight to an item, Enter/Space launches, `a` toggles auto-scrolling,
   `Esc`/Left/`b` returns from a group to the root and `q` quits (a launched
   demo goes back to its group when it exits). The menu uses a built-in 4x6
-  bitmap font (`pixelplay.text`): labels are drawn 2x on panels of 64 px or
+  bitmap font (`pixelplay.library.text`): labels are drawn 2x on panels of 64 px or
   more (4 rows of 12 px text) and a 32x32 matrix keeps single pixels (4 rows
   of 6 px text), scrolling the rest of the list. Unselected rows are slightly
   dimmed so the white band of the selection stands out.

@@ -1,7 +1,8 @@
 """Interactive harness to test display offloading from the workstation.
 
 Opens a local ``tkinter`` window showing a magnified preview of the panel and
-lets you move a controllable element (:class:`pixelplay.control.Sprite`) with
+lets you move a controllable element
+(:class:`pixelplay.library.control.Sprite`) with
 the keyboard. Every change is mirrored to the physical panel, so you can check
 end-to-end that what you control locally is displayed remotely.
 
@@ -15,9 +16,9 @@ from typing import Optional
 
 from PIL import Image
 
-from .control import Sprite
-from .panel import Panel, use_panel
-from .sender import FrameSender
+from ..library.control import Sprite
+from ..library.panel import Panel, use_panel
+from ..library.sender import FrameSender
 
 # Backwards-compatible alias: ``_Sender`` used to live in this module.
 _Sender = FrameSender
@@ -42,7 +43,7 @@ def run_play(
         fps: Target send rate (frames per second).
         size: Half-size of the controlled element in pixels.
         panel: Optional already connected panel to use instead of connecting;
-            a borrowed panel is left open (see :func:`pixelplay.panel.use_panel`).
+            a borrowed panel is left open (see :func:`pixelplay.library.panel.use_panel`).
     """
     import tkinter as tk
 

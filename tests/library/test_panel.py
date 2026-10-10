@@ -8,7 +8,7 @@ import io
 
 from PIL import Image
 
-from pixelplay.panel import Panel
+from pixelplay.library.panel import Panel
 
 PNG_MAGIC = b"\x89PNG\r\n\x1a\n"
 

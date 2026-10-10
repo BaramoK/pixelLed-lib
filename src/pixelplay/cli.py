@@ -7,14 +7,14 @@ import sys
 from typing import Optional
 
 from . import __version__
-from .bench import run_bench
-from .breakout import run_breakout
+from .debug.bench import run_bench
+from .debug.mirror import run_mirror
+from .debug.play import run_play
+from .games.breakout import run_breakout
+from .games.tetris import run_tetris
+from .library.panel import Panel
+from .library.render import RENDERERS, render_bouncing_ball
 from .menu import run_menu
-from .mirror import run_mirror
-from .panel import Panel
-from .play import run_play
-from .render import RENDERERS, render_bouncing_ball
-from .tetris import run_tetris
 
 
 def _add_common(parser: argparse.ArgumentParser) -> None:

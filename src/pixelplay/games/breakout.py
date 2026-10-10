@@ -1,8 +1,9 @@
 """A small brick-breaker (breakout) demo rendered on the LED panel.
 
 :class:`Breakout` holds the whole game state and is pure (no BLE, no I/O), so
-it can be unit tested without hardware - exactly like :mod:`pixelplay.render`
-and :mod:`pixelplay.control`. :func:`run_breakout` wires it to a real panel:
+it can be unit tested without hardware - exactly like
+:mod:`pixelplay.library.render` and :mod:`pixelplay.library.control`.
+:func:`run_breakout` wires it to a real panel:
 everything (field + HUD) is displayed on the LED matrix, and a *minimal*
 tkinter window is used only to capture keyboard input.
 """
@@ -14,8 +15,8 @@ from typing import Optional
 
 from PIL import Image, ImageDraw
 
-from .panel import Panel, use_panel
-from .sender import FrameSender
+from ..library.panel import Panel, use_panel
+from ..library.sender import FrameSender
 
 Color = tuple[int, int, int]
 
@@ -407,7 +408,7 @@ def run_breakout(
         speed: Pixels travelled per tick (``>= 1``).
         hud: Draw the on-panel HUD (score bar + lives).
         panel: Optional already connected panel to use instead of connecting;
-            a borrowed panel is left open (see :func:`pixelplay.panel.use_panel`).
+            a borrowed panel is left open (see :func:`pixelplay.library.panel.use_panel`).
     """
     import tkinter as tk
 
