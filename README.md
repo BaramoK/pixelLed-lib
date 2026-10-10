@@ -122,6 +122,41 @@ pytest
 The renderer, control, text, keys, menu, mirror and panel tests run without any
 hardware.
 
+## Troubleshooting
+
+### `Fatal error in launcher: Unable to create process using ...`
+
+This error means the virtual environment was moved or renamed: a venv is not
+relocatable. Its `pyvenv.cfg`, the editable install `.pth` files and every
+console script launcher (`pixelled-lib.exe`, `pip.exe`, `pytest.exe`, ...) store
+absolute paths recorded when the environment was created, so the launcher tries
+to start a `python.exe` that no longer exists (on a localized Windows the
+message ends with something like *Le fichier spécifié est introuvable*). The
+venv's own `python.exe` keeps working, which is why `python -m pytest` still
+runs while `pixelled-lib` fails.
+
+Recreate the environment:
+
+```bash
+deactivate                       # or open a fresh terminal
+rm -rf .venv                     # PowerShell: Remove-Item -Recurse -Force .venv
+python -m venv .venv
+.venv/Scripts/python -m pip install --upgrade pip
+.venv/Scripts/python -m pip install -e ".[dev]"
+```
+
+Then check that the console script is healthy again:
+
+```bash
+.venv/Scripts/pixelled-lib --version
+.venv/Scripts/python -m pytest
+```
+
+To run something right away without touching the venv, use the module form
+(`.venv/Scripts/python -m pixelled_lib ...`), which bypasses the launcher. Keep
+`.venv/` inside the project and avoid renaming the project folder once the
+environment exists.
+
 ## License
 
 MIT. This is a third-party project, not affiliated with iPixel Color.
