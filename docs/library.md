@@ -1,27 +1,28 @@
-# Implementation guide — `pixelplay.library`
+# Implementation guide — `pixelled_lib.library`
 
 ## 1. Goal and scope
 
-`pixelplay.library` groups the **reusable**, **application-agnostic** building
-blocks: no diagnostic/POC tool (→ `pixelplay.debug`), no game
-(→ `pixelplay.games`), no orchestration (→ `menu.py`, `cli.py`).
+`pixelled_lib.library` groups the **reusable**, **application-agnostic** building
+blocks: no diagnostic/POC tool (→ `pixelled_lib.debug`), no launcher wiring
+(→ `launcher.py`) and no orchestration (→ `cli.py`). Games live in the companion
+project `pixelled_play`, which depends on this package but is not part of it.
 
 **Golden dependency rule:** arrows *always* point towards `library`.
 
 ```
-debug/ ─┐
-games/ ─┼──► library/
-menu.py ┘
+debug/      ─┐
+launcher.py  ┼──► library/
+cli.py       ┘
 ```
 
-`library` must **never** import `debug`, `games`, `menu` or `cli`.
+`library` must **never** import `debug`, `launcher` or `cli`.
 
 Two module families:
 
 | Family | Modules | Requires hardware? |
 |---|---|---|
 | **I/O (BLE)** | `panel.py`, `sender.py` | yes |
-| **Pure** | `render.py`, `control.py`, `text.py`, `keys.py` | no (unit testable) |
+| **Pure** | `render.py`, `control.py`, `text.py`, `keys.py`, `menu.py` | no (unit testable) |
 
 ## 2. Technical constraints
 
@@ -36,14 +37,15 @@ Two module families:
 ## 3. Layout
 
 ```
-src/pixelplay/library/
+src/pixelled_lib/library/
 ├── __init__.py   # aggregates and re-exports the public API of the sub-package
 ├── panel.py      # Panel (connect + push one frame) and use_panel()
 ├── sender.py     # FrameSender ("last-write-wins" thread)
 ├── render.py     # pure renderers -> PIL.Image
 ├── control.py    # Sprite (movable element) + PALETTE
 ├── text.py       # 4x6 bitmap font + metrics + draw_text
-└── keys.py       # KeyRepeater (keyboard auto-repeat)
+├── keys.py       # KeyRepeater (keyboard auto-repeat)
+└── menu.py       # Menu / MenuItem / MenuGroup / AutoPilot + run_menu()
 ```
 
 ## 4. Internal dependency graph
@@ -55,6 +57,7 @@ render.py     (no internal import)
 control.py    (no internal import)
 text.py       (no internal import)
 keys.py       (no internal import)
+menu.py     ──► keys.py, panel.py, sender.py, text.py
 __init__.py ──► all
 ```
 
@@ -192,13 +195,31 @@ checking on the caller side).
 - Counting is done in **ticks**, so it is independent of the exact event timing:
   a short press fires exactly once.
 
-### 5.7 `__init__.py` — facade
+### 5.7 `menu.py` — launcher engine
+
+The generic on-panel launcher. `MenuItem` (label + title + action), `MenuGroup`
+(a named section that opens a sub-menu), `Menu` (selection state and rendering)
+and `AutoPilot` (auto-scroll policy) are pure; `run_menu()` drives a tkinter
+window against an **already connected** `Panel`. The engine is
+application-agnostic: each project passes its own groups (`pixelled_lib.launcher`
+for the debug tools, the `pixelled_play` project for the games).
+
+| Symbol | Meaning |
+|---|---|
+| `Menu(items, index=0)` | pure selection state; `move` / `jump` / `selected` |
+| `Menu.render(w, h)` | draws the list, the selected row inverted |
+| `MenuGroup(label, title, items)` | a section that opens its own sub-menu |
+| `AutoPilot(delay, resume, auto)` | decides when the list scrolls by itself |
+| `run_menu(panel, groups, fps, auto, title)` | keyboard loop, returns when quitting |
+| `chars_fit` / `rows_fit` / `display_scale` | panel geometry helpers |
+
+### 5.8 `__init__.py` — facade
 
 Re-exports the public API of the sub-package and sets `__all__` (sorted). Usage
 example:
 
 ```python
-from pixelplay.library import Panel, FrameSender, Sprite, render_bouncing_ball
+from pixelled_lib.library import Panel, FrameSender, Sprite, render_bouncing_ball
 ```
 
 ## 6. Invariants / contracts
@@ -208,7 +229,7 @@ from pixelplay.library import Panel, FrameSender, Sprite, render_bouncing_ball
 - `Sprite` always clamps its position to the panel.
 - `FrameSender` never raises inside `run()`.
 - `use_panel` never closes a borrowed panel.
-- `library` never imports `debug`/`games`/`menu`/`cli`.
+- `library` never imports `debug`/`launcher`/`cli`.
 
 ## 7. Adding a new renderer
 
@@ -263,7 +284,7 @@ cycling, pixel-by-pixel rendering, then the `render → send_frame` chain.
 ## 9. Checklist for a new `library` module
 
 - [ ] `from __future__ import annotations` at the top.
-- [ ] No import towards `debug`/`games`/`menu`/`cli`.
+- [ ] No import towards `debug`/`launcher`/`cli`.
 - [ ] Module docstring + NumPy-style "parameters" docstrings (like the others).
 - [ ] Hardware I/O isolated (like `panel.py`).
 - [ ] Export in `library/__init__.py` + entry in `__all__`.
@@ -279,4 +300,5 @@ cycling, pixel-by-pixel rendering, then the `render → send_frame` chain.
 | `library/control.py` | `tests/library/test_control.py` |
 | `library/text.py` | `tests/library/test_text.py` |
 | `library/sender.py` | `tests/library/test_control.py` (thread test) |
-| `library/keys.py` | covered indirectly (`tests/games/test_tetris.py`) |
+| `library/keys.py` | `tests/library/test_keys.py` |
+| `library/menu.py` | `tests/test_menu.py` |

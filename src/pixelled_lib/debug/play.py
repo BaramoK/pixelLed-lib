@@ -2,7 +2,7 @@
 
 Opens a local ``tkinter`` window showing a magnified preview of the panel and
 lets you move a controllable element
-(:class:`pixelplay.library.control.Sprite`) with
+(:class:`pixelled_lib.library.control.Sprite`) with
 the keyboard. Every change is mirrored to the physical panel, so you can check
 end-to-end that what you control locally is displayed remotely.
 
@@ -43,7 +43,7 @@ def run_play(
         fps: Target send rate (frames per second).
         size: Half-size of the controlled element in pixels.
         panel: Optional already connected panel to use instead of connecting;
-            a borrowed panel is left open (see :func:`pixelplay.library.panel.use_panel`).
+            a borrowed panel is left open (see :func:`pixelled_lib.library.panel.use_panel`).
     """
     import tkinter as tk
 
@@ -67,7 +67,7 @@ def run_play(
         view_h = panel.height * scale
 
         root = tk.Tk()
-        root.title(f"pixelplay play - {panel.width}x{panel.height} @ {address}")
+        root.title(f"pixelled_lib play - {panel.width}x{panel.height} @ {address}")
         canvas = tk.Canvas(
             root, width=view_w, height=view_h, highlightthickness=0, bg="black"
         )

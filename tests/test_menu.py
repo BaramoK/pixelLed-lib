@@ -2,7 +2,8 @@
 
 import pytest
 
-from pixelplay.menu import (
+from pixelled_lib.launcher import build_debug_groups
+from pixelled_lib.library.menu import (
     MARGIN,
     MAX_CHARS,
     SELECTED_BG,
@@ -12,14 +13,13 @@ from pixelplay.menu import (
     Menu,
     MenuGroup,
     MenuItem,
-    build_groups,
     chars_fit,
     display_scale,
     rows_fit,
 )
-from pixelplay.library.text import GLYPH_H, SPACING, text_width
+from pixelled_lib.library.text import GLYPH_H, SPACING, text_width
 
-LABELS = ["INFO", "BENCH", "MIRROR", "PLAY", "BRKOUT", "TETRIS"]
+LABELS = ["INFO", "BENCH", "MIRROR", "PLAY", "ABOUT", "QUIT"]
 BLACK = (0, 0, 0)
 
 
@@ -185,12 +185,11 @@ def test_every_label_fits_a_32px_wide_panel():
 # -- items ------------------------------------------------------------------
 
 
-def test_build_groups_exposes_games_and_debug():
-    groups = build_groups("00:11:22:33:44:55")
+def test_build_debug_groups_exposes_the_debug_tools():
+    groups = build_debug_groups("00:11:22:33:44:55")
 
-    assert [group.label for group in groups] == ["GAMES", "DEBUG"]
-    assert [item.label for item in groups[0].items] == ["BRKOUT", "TETRIS"]
-    assert [item.label for item in groups[1].items] == [
+    assert [group.label for group in groups] == ["DEBUG"]
+    assert [item.label for item in groups[0].items] == [
         "INFO",
         "BENCH",
         "MIRROR",
@@ -203,31 +202,36 @@ def test_build_groups_exposes_games_and_debug():
 
 
 def test_every_group_label_fits_a_32px_wide_panel():
-    for group in build_groups("00:11:22:33:44:55"):
+    for group in build_debug_groups("00:11:22:33:44:55"):
         assert len(group.label) <= MAX_CHARS
         assert text_width(group.label) <= 32 - 2 * MARGIN
 
 
 def test_every_group_has_at_least_one_item():
-    for group in build_groups("00:11:22:33:44:55"):
+    for group in build_debug_groups("00:11:22:33:44:55"):
         assert group.items
 
 
 def test_the_root_menu_lists_the_groups():
-    groups = build_groups("00:11:22:33:44:55")
+    groups = build_debug_groups("00:11:22:33:44:55")
     root = Menu(
         [MenuItem(group.label, group.title, lambda panel: None) for group in groups]
     )
 
-    assert [item.label for item in root.items] == ["GAMES", "DEBUG"]
+    assert [item.label for item in root.items] == ["DEBUG"]
     assert root.render(32, 32).size == (32, 32)
 
 
 def test_a_group_opens_as_a_regular_menu():
-    games = build_groups("00:11:22:33:44:55")[0]
-    menu = Menu(games.items)
+    debug = build_debug_groups("00:11:22:33:44:55")[0]
+    menu = Menu(debug.items)
 
-    assert [item.label for item in menu.items] == ["BRKOUT", "TETRIS"]
+    assert [item.label for item in menu.items] == [
+        "INFO",
+        "BENCH",
+        "MIRROR",
+        "PLAY",
+    ]
     assert menu.render(32, 32).size == (32, 32)
 
 

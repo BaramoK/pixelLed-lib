@@ -7,10 +7,12 @@ without a keyboard at all: the first arrow key takes over, and auto-scrolling
 resumes once the keyboard has been idle for a few seconds.
 
 :class:`Menu` (state + rendering) and :class:`AutoPilot` (auto-scroll policy)
-are pure - no BLE, no tkinter - and therefore unit tested; :func:`run_menu` is
-the only part that opens a window and talks to hardware. The whole session
-shares a single BLE connection: every tool borrows the panel opened here (see
-:func:`pixelplay.library.panel.use_panel`) instead of reconnecting.
+are pure - no BLE, no tkinter - and therefore unit tested. The engine is
+application agnostic: callers pass the :class:`MenuGroup` list they want to
+show plus an already-connected panel, so each application only has to describe
+its own tools. The whole session shares a single BLE connection: every tool
+borrows the panel it is given (see
+:func:`pixelled_lib.library.panel.use_panel`) instead of reconnecting.
 """
 
 from __future__ import annotations
@@ -20,16 +22,10 @@ from typing import Callable, Optional, Sequence, Union
 
 from PIL import Image, ImageDraw
 
-from .debug.bench import run_bench
-from .debug.mirror import run_mirror
-from .debug.play import run_play
-from .games.breakout import run_breakout
-from .games.tetris import run_tetris
-from .library.keys import KeyRepeater
-from .library.panel import Panel
-from .library.render import render_bouncing_ball
-from .library.sender import FrameSender
-from .library.text import (
+from .keys import KeyRepeater
+from .panel import Panel
+from .sender import FrameSender
+from .text import (
     SPACING,
     draw_text,
     text_advance,
@@ -52,11 +48,6 @@ MIN_ROWS = 3  # a zoom that leaves fewer rows than this is not worth it
 MAX_CHARS = 6  # longest label the launcher uses
 AUTO_DELAY_S = 2.0  # seconds between two automatic moves
 AUTO_RESUME_S = 5.0  # idle seconds after which auto-scrolling resumes
-
-# Per-tool settings used when the launcher starts a tool.
-_BENCH_FRAMES = 60
-_BREAKOUT_FPS = 15.0
-_TETRIS_FPS = 10.0
 
 _HELP = (
     "up/down or W/S: move   1-9: jump   Enter: launch\n"
@@ -313,173 +304,64 @@ def _ticks(seconds: float, fps: float) -> int:
     return max(1, int(round(seconds * fps)))
 
 
-def build_groups(
-    address: str,
-    fps: float = 10.0,
-    scale: int = 12,
-    seed: Optional[int] = None,
-) -> list[MenuGroup]:
-    """Build the launcher groups; each action borrows the panel it is given."""
-
-    def show_info(panel: Panel) -> None:
-        print(panel.describe())
-
-    games = [
-        MenuItem(
-            "BRKOUT",
-            "play the brick-breaker demo",
-            lambda panel: run_breakout(
-                address, fps=_BREAKOUT_FPS, seed=seed, panel=panel
-            ),
-        ),
-        MenuItem(
-            "TETRIS",
-            "play the Tetris demo",
-            lambda panel: run_tetris(
-                address, fps=_TETRIS_FPS, seed=seed, panel=panel
-            ),
-        ),
-    ]
-    debug = [
-        MenuItem("INFO", "show the panel information", show_info),
-        MenuItem(
-            "BENCH",
-            "benchmark the achievable frame rate",
-            lambda panel: run_bench(
-                address, frames=_BENCH_FRAMES, pattern="bars", panel=panel
-            ),
-        ),
-        MenuItem(
-            "MIRROR",
-            "mirror the bouncing ball until a key is pressed",
-            lambda panel: _mirror_until_key(address, panel, fps),
-        ),
-        MenuItem(
-            "PLAY",
-            "control an element with the keyboard",
-            lambda panel: run_play(address, scale=scale, fps=fps, panel=panel),
-        ),
-    ]
-    return [
-        MenuGroup("GAMES", "games", games),
-        MenuGroup("DEBUG", "debug tools", debug),
-    ]
-
-
-def _mirror_until_key(address: str, panel: Panel, fps: float) -> None:
-    """Mirror the default animation until any key is pressed.
-
-    ``run_mirror`` blocks the thread that calls it, so the tiny window pumps
-    its own event queue from ``should_stop`` to stay responsive.
-    """
-    import tkinter as tk
-
-    state = {"stop": False}
-    root = tk.Tk()
-    root.title("pixelplay mirror")
-    tk.Label(
-        root,
-        font=("Consolas", 9),
-        text="mirroring the bouncing ball - press any key to stop",
-    ).pack(padx=10, pady=10)
-
-    def stop(_event=None) -> None:
-        state["stop"] = True
-        try:
-            root.destroy()
-        except tk.TclError:
-            pass
-
-    def should_stop() -> bool:
-        try:
-            root.update()
-        except tk.TclError:
-            return True  # the window is gone: stop the loop
-        return state["stop"]
-
-    root.bind("<Key>", stop)
-    root.protocol("WM_DELETE_WINDOW", stop)
-    root.focus_force()
-    print("Press any key in the mirror window to stop.")
-    try:
-        run_mirror(
-            address,
-            fps=fps,
-            renderer=render_bouncing_ball,
-            panel=panel,
-            should_stop=should_stop,
-        )
-    finally:
-        try:
-            root.destroy()
-        except tk.TclError:
-            pass
-
-
 def run_menu(
-    address: str,
-    brightness: Optional[int] = None,
+    panel: Panel,
+    groups: Sequence[MenuGroup],
     fps: float = 10.0,
-    scale: int = 12,
-    seed: Optional[int] = None,
     auto: float = AUTO_DELAY_S,
+    title: str = "pixelled launcher",
 ) -> None:
     """Show the launcher on the panel and run whichever tool is selected.
 
-    The launcher is grouped: the root menu lists the groups (Games, Debug)
-    and choosing one opens its sub-menu. The panel is connected once for the
-    whole session: the selected tool borrows that connection, and its group
-    comes back when the tool exits (Esc/Left/``b`` returns to the root).
+    The launcher is grouped: the root menu lists the groups and choosing one
+    opens its sub-menu. ``panel`` must already be connected - the selected tool
+    borrows that connection, and its group comes back when the tool exits
+    (Esc/Left/``b`` returns to the root).
 
     Args:
-        address: Bluetooth MAC address of the panel.
-        brightness: Optional brightness (0-100) applied on connect.
-        fps: Menu refresh rate (frames per second) and tool rate.
-        scale: Preview magnification passed on to ``play``.
-        seed: Optional RNG seed passed on to the games.
+        panel: An open panel to draw on and to lend to the selected tool.
+        groups: The groups of the launcher (at least one).
+        fps: Menu refresh rate (frames per second).
         auto: Seconds between two automatic moves (``0`` starts in keyboard
             mode; ``a`` still toggles auto-scrolling on).
+        title: Header printed in the terminal when the launcher starts.
     """
-    groups = build_groups(address, fps=fps, scale=scale, seed=seed)
     by_label = {group.label: group for group in groups}
     root = Menu([MenuItem(group.label, group.title, _noop) for group in groups])
 
-    with Panel(address, brightness=brightness) as panel:
-        print(panel.describe())
-        if auto > 0:
-            print(f"pixelplay launcher (auto-scroll: {auto:g}s per item)")
-        else:
-            print("pixelplay launcher (auto-scroll off)")
-        print(_HELP)
-        delay = _ticks(auto if auto > 0 else AUTO_DELAY_S, fps)
-        resume = _ticks(AUTO_RESUME_S, fps) if auto > 0 else 0
+    print(panel.describe())
+    if auto > 0:
+        print(f"{title} (auto-scroll: {auto:g}s per item)")
+    else:
+        print(f"{title} (auto-scroll off)")
+    print(_HELP)
+    delay = _ticks(auto if auto > 0 else AUTO_DELAY_S, fps)
+    resume = _ticks(AUTO_RESUME_S, fps) if auto > 0 else 0
+    while True:
+        group = _choose(panel, root, fps, delay=delay, resume=resume, auto=auto > 0)
+        if group is None:
+            print("Bye.")
+            return
+        menu = Menu(by_label[group.label].items)
+        print(f"--- {by_label[group.label].title} ---")
         while True:
-            group = _choose(
-                panel, root, fps, delay=delay, resume=resume, auto=auto > 0
+            item = _choose(
+                panel,
+                menu,
+                fps,
+                delay=delay,
+                resume=resume,
+                auto=auto > 0,
+                allow_back=True,
             )
-            if group is None:
+            if item is None:
                 print("Bye.")
                 return
-            menu = Menu(by_label[group.label].items)
-            print(f"--- {by_label[group.label].title} ---")
-            while True:
-                item = _choose(
-                    panel,
-                    menu,
-                    fps,
-                    delay=delay,
-                    resume=resume,
-                    auto=auto > 0,
-                    allow_back=True,
-                )
-                if item is None:
-                    print("Bye.")
-                    return
-                if item is _BACK:
-                    break
-                print(f"--- {item.title} ---")
-                item.action(panel)
-                print("--- back to the launcher ---")
+            if item is _BACK:
+                break
+            print(f"--- {item.title} ---")
+            item.action(panel)
+            print("--- back to the launcher ---")
 
 
 def _choose(
@@ -511,7 +393,7 @@ def _choose(
     alive = True
 
     root = tk.Tk()
-    root.title("pixelplay launcher - keyboard")
+    root.title("pixelled launcher - keyboard")
     label = tk.Label(root, anchor="w", justify="left", font=("Consolas", 9))
     label.pack(padx=10, pady=10)
 

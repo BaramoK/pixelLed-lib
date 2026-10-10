@@ -1,4 +1,4 @@
-"""Entry point allowing ``python -m pixelplay``."""
+"""Entry point allowing ``python -m pixelled_lib``."""
 
 from .cli import main
 

@@ -1,7 +1,7 @@
 """A single controllable graphical element, decoupled from BLE.
 
 The :class:`Sprite` is the element that can be moved/controlled from the
-workstation. Like the renderers in :mod:`pixelplay.library.render` it is
+workstation. Like the renderers in :mod:`pixelled_lib.library.render` it is
 deliberately
 pure (no BLE, no I/O) so it can be unit tested without any hardware.
 """

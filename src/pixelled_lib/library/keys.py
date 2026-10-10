@@ -1,10 +1,10 @@
 """Keyboard auto-repeat helper shared by the interactive tools.
 
-The interactive tools (``tetris``, ``menu``) run a periodic tick and bind
-``<KeyPress>``/``<KeyRelease>``. Doing both naively double-applies an action:
-the key press acts once *and* the held key is acted upon again on the next
-tick. :class:`KeyRepeater` centralizes the fix, and it is pure Python so it can
-be unit tested without a window.
+The interactive tools (the launcher, ``play`` and the games) run a periodic
+tick and bind ``<KeyPress>``/``<KeyRelease>``. Doing both naively
+double-applies an action: the key press acts once *and* the held key is acted
+upon again on the next tick. :class:`KeyRepeater` centralizes the fix, and it
+is pure Python so it can be unit tested without a window.
 """
 
 from __future__ import annotations

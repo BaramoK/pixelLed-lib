@@ -1,4 +1,4 @@
-"""Command line interface for pixelplay."""
+"""Command line interface for pixelled_lib."""
 
 from __future__ import annotations
 
@@ -10,11 +10,9 @@ from . import __version__
 from .debug.bench import run_bench
 from .debug.mirror import run_mirror
 from .debug.play import run_play
-from .games.breakout import run_breakout
-from .games.tetris import run_tetris
+from .launcher import run_launcher
 from .library.panel import Panel
 from .library.render import RENDERERS, render_bouncing_ball
-from .menu import run_menu
 
 
 def _add_common(parser: argparse.ArgumentParser) -> None:
@@ -35,14 +33,14 @@ def _add_common(parser: argparse.ArgumentParser) -> None:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="pixelplay",
+        prog="pixelled-lib",
         description=(
             "Mirror locally rendered frames to an iPixel Color LED matrix "
             "panel (built on pypixelcolor)."
         ),
     )
     parser.add_argument(
-        "--version", action="version", version=f"pixelplay {__version__}"
+        "--version", action="version", version=f"pixelled-lib {__version__}"
     )
     sub = parser.add_subparsers(dest="command", required=True)
 
@@ -96,58 +94,6 @@ def build_parser() -> argparse.ArgumentParser:
         "--size", type=int, default=3, help="Element half-size in pixels (default 3)."
     )
 
-    p_breakout = sub.add_parser(
-        "breakout", help="Play a brick-breaker demo entirely on the panel."
-    )
-    _add_common(p_breakout)
-    p_breakout.add_argument(
-        "--fps", type=float, default=15.0, help="Game/send rate in fps (default 15)."
-    )
-    p_breakout.add_argument(
-        "--speed",
-        type=int,
-        default=1,
-        help="Ball speed in pixels per tick (default 1).",
-    )
-    p_breakout.add_argument(
-        "--lives", type=int, default=3, help="Number of balls (default 3)."
-    )
-    p_breakout.add_argument(
-        "--density",
-        type=float,
-        default=0.6,
-        help="Probability for a wall cell to hold a brick (default 0.6).",
-    )
-    p_breakout.add_argument(
-        "--seed", type=int, default=None, help="RNG seed for a reproducible wall."
-    )
-    p_breakout.add_argument(
-        "--no-hud",
-        dest="hud",
-        action="store_false",
-        help="Do not reserve the top row for the on-panel HUD.",
-    )
-
-    p_tetris = sub.add_parser(
-        "tetris", help="Play a Tetris demo entirely on the panel."
-    )
-    _add_common(p_tetris)
-    p_tetris.add_argument(
-        "--fps", type=float, default=10.0, help="Game/send rate in fps (default 10)."
-    )
-    p_tetris.add_argument(
-        "--level", type=int, default=1, help="Starting level (default 1)."
-    )
-    p_tetris.add_argument(
-        "--seed", type=int, default=None, help="RNG seed for a reproducible run."
-    )
-    p_tetris.add_argument(
-        "--no-hud",
-        dest="hud",
-        action="store_false",
-        help="Do not reserve the right band for the on-panel HUD.",
-    )
-
     p_menu = sub.add_parser(
         "menu",
         help="Show a launcher on the panel and run the selected tool.",
@@ -161,9 +107,6 @@ def build_parser() -> argparse.ArgumentParser:
         type=int,
         default=12,
         help="Preview magnification for 'play' (default 12).",
-    )
-    p_menu.add_argument(
-        "--seed", type=int, default=None, help="RNG seed for the games."
     )
     p_menu.add_argument(
         "--auto",
@@ -214,37 +157,12 @@ def main(argv: Optional[list[str]] = None) -> int:
         )
         return 0
 
-    if args.command == "breakout":
-        run_breakout(
-            args.address,
-            brightness=args.brightness,
-            fps=args.fps,
-            seed=args.seed,
-            density=args.density,
-            lives=args.lives,
-            speed=args.speed,
-            hud=args.hud,
-        )
-        return 0
-
-    if args.command == "tetris":
-        run_tetris(
-            args.address,
-            brightness=args.brightness,
-            fps=args.fps,
-            level=args.level,
-            seed=args.seed,
-            hud=args.hud,
-        )
-        return 0
-
     if args.command == "menu":
-        run_menu(
+        run_launcher(
             args.address,
             brightness=args.brightness,
             fps=args.fps,
             scale=args.scale,
-            seed=args.seed,
             auto=args.auto,
         )
         return 0

@@ -6,7 +6,7 @@ A fake panel records the frames, so the loop can be driven by a
 
 from PIL import Image
 
-from pixelplay.debug.mirror import run_mirror
+from pixelled_lib.debug.mirror import run_mirror
 
 ADDRESS = "00:00:00:00:00:00"
 

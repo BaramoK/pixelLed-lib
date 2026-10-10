@@ -3,8 +3,8 @@
 import pytest
 from PIL import Image
 
-from pixelplay import render_bars, render_bouncing_ball, render_gradient
-from pixelplay.library.render import RENDERERS
+from pixelled_lib import render_bars, render_bouncing_ball, render_gradient
+from pixelled_lib.library.render import RENDERERS
 
 SIZES = [(32, 16), (32, 32), (64, 64)]
 

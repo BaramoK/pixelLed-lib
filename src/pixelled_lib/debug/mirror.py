@@ -34,7 +34,7 @@ def run_mirror(
         on_stats: Optional callback invoked after each frame with
             ``(measured_fps, frame_index)``.
         panel: Optional already connected panel to use instead of connecting;
-            a borrowed panel is left open (see :func:`pixelplay.library.panel.use_panel`).
+            a borrowed panel is left open (see :func:`pixelled_lib.library.panel.use_panel`).
         should_stop: Optional predicate polled before each frame; the loop
             stops as soon as it returns True.
     """

@@ -25,7 +25,7 @@ def run_bench(
         pattern: One of the keys of ``render.RENDERERS``.
         brightness: Optional brightness (0-100) applied on connect.
         panel: Optional already connected panel to use instead of connecting;
-            a borrowed panel is left open (see :func:`pixelplay.library.panel.use_panel`).
+            a borrowed panel is left open (see :func:`pixelled_lib.library.panel.use_panel`).
     """
     renderer = RENDERERS.get(pattern, render_bars)
     encode_timings: list[float] = []

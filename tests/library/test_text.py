@@ -2,7 +2,7 @@
 
 from PIL import Image, ImageDraw
 
-from pixelplay.library.text import (
+from pixelled_lib.library.text import (
     GLYPHS,
     GLYPH_H,
     GLYPH_W,
